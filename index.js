@@ -7,7 +7,7 @@ app.use(express.json())
 app.use(cors())
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hxdwxas.mongodb.net/?retryWrites=true&w=majority`;
 
 
@@ -39,6 +39,68 @@ async function run() {
         const query = {creatorEmail : email}
         const users = await userCollection.find(query).toArray()
         res.send(users)
+    })
+    app.get('/user/:id' , async(req , res) => {
+        const id = req.params.id
+        console.log(id)
+        const query = {_id :  new ObjectId(id)}
+        const user = await userCollection.findOne(query)
+        res.send(user)
+    })
+    app.get('/filteredUsers', async(req, res) => {
+        const sortBy = req.query.sortBy || 'default';
+        const email = req.query.email
+        const query = {creatorEmail : email}
+        let data =await userCollection.find(query).toArray();
+      
+       
+        switch (sortBy) {
+          case 'A-Z':
+            data?.sort((a, b) => a.userName.localeCompare(b.userName));
+            break;
+          case 'Z-A':
+            data?.sort((a, b) => b.userName.localeCompare(a.userName));
+            break;
+          case 'Last Modified':
+            data?.sort((a, b) => b.modifiedAt - a.modifiedAt);
+            break;
+          case 'Last Inserted':
+            
+            break;
+         
+      
+          default:
+            
+            break;
+        }
+      
+        res.send(data);
+      });
+    app.patch('/user/:id' , async(req , res) => {
+        const id = req.params.id
+        const user = req.body
+        const filter = {_id : new ObjectId(id)}
+        const options = { upsert: true }
+        const updatedUser = {
+        $set :{
+           userName: user.userName,
+           phone : user.phone,
+           email:user.email,
+           creatorEmail:user.creatorEmail
+
+
+        }
+        }
+        const result = await userCollection.updateOne(filter, updatedUser, options)
+        res.send(result)
+
+    })
+
+    app.delete('/user/:id' , async(req , res) => {
+        const id = req.params.id
+        const query = {_id : new ObjectId(id)}
+        const result  =await userCollection.deleteOne(query)
+        res.send(result)
     })
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
