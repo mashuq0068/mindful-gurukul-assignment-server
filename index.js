@@ -62,10 +62,10 @@ async function run() {
                     data?.sort((a, b) => b.userName.localeCompare(a.userName));
                     break;
                 case 'Last Modified':
-                    data?.sort((a, b) => b.modifiedAt ? new Date(b.modifiedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() : 0  - a.modifiedAt ? new Date(a.modifiedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() : 0 )
+                    data?.sort((a, b) => (b.modifiedAt ? new Date(b.modifiedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() : 0) - (a.modifiedAt ? new Date(a.modifiedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() : 0));
                     break;
                 case 'Last Inserted':
-                    data?.sort((a, b) =>  new Date(b.insertedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() -  new Date(a.insertedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime())
+                    data?.sort((a, b) => new Date(b.insertedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime() - new Date(a.insertedAt.replace(/(\d+)(st|nd|rd|th)/, '$1').replace(/,/, '')).getTime())
                     break;
                 default:
                     break;
@@ -73,6 +73,24 @@ async function run() {
 
             res.send(data);
         });
+
+        
+        app.get('/searchedUsers', async (req, res) => {
+            const sortBy = req.query.sortBy || 'default';
+            const email = req.query.email;
+            const searchTerm = req.query.searchTerm || ""; 
+            const query = {
+                creatorEmail: email,
+                $or: [
+                    { userName: { $regex: searchTerm, $options: 'i' } }, // 
+                    { email: { $regex: searchTerm, $options: 'i' } },
+                    { phone: { $regex: searchTerm, $options: 'i' } },
+                ],
+            };
+            let data = await userCollection.find(query).toArray();
+            res.send(data);
+        });
+
         app.patch('/user/:id', async (req, res) => {
             const id = req.params.id
             const user = req.body
