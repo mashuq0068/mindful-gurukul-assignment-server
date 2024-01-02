@@ -1,5 +1,6 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+require('dotenv').config();
 
 const router = express.Router();
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hxdwxas.mongodb.net/?retryWrites=true&w=majority`;
@@ -18,15 +19,17 @@ async function connectMongoDB() {
 }
 
 // POST /user
-router.post('/', async (req, res) => {
+router.post('/user', async (req, res) => {
     const userCollection = await connectMongoDB();
     const user = req.body;
     const result = await userCollection.insertOne(user);
+
+    
     res.send(result);
 });
 
 // GET /users
-router.get('/', async (req, res) => {
+router.get('/users', async (req, res) => {
     const userCollection = await connectMongoDB();
     const email = req.query.email;
     const query = { creatorEmail: email };
@@ -35,10 +38,11 @@ router.get('/', async (req, res) => {
 });
 
 // GET /user/:id
-router.get('/:id', async (req, res) => {
+router.get('/user/:id', async (req, res) => {
     const userCollection = await connectMongoDB();
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
+    console.log(query)
     const user = await userCollection.findOne(query);
     res.send(user);
 });
@@ -90,7 +94,7 @@ router.get('/searchedUsers', async (req, res) => {
 });
 
 // PATCH /user/:id
-router.patch('/:id', async (req, res) => {
+router.patch('/user/:id', async (req, res) => {
     const userCollection = await connectMongoDB();
     const id = req.params.id;
     const user = req.body;
@@ -111,7 +115,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE /user/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/user/:id', async (req, res) => {
     const userCollection = await connectMongoDB();
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
